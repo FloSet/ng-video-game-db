@@ -46,9 +46,6 @@ import { HttpErrorsInterceptor } from './interceptors/http-errors.interceptor';
       multi: true,
     },
   ],
-  RuntimeConfigLoaderModule.forRoot({
-    configUrl: environment.runtimeConfigUrl
-  }),
   bootstrap: [AppComponent],
 })
 export class AppModule {}
