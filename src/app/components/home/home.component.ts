@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ActivatedRoute, Params } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { APIResponse, Game } from 'src/app/models';
 import { GamePlatformService } from 'src/app/services/game-platform.service';
 import { HttpService } from 'src/app/services/http.service';
@@ -10,19 +11,22 @@ import { HttpService } from 'src/app/services/http.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   public sort: string = '-added';
   public games: Game[] = [];
+  private routeSub!: Subscription;
+  private gameSub!: Subscription;
 
   constructor(
     private httpService: HttpService,
     private activatedRoute: ActivatedRoute,
     protected gamePlatformService: GamePlatformService,
-    protected sanitizer: DomSanitizer
+    protected sanitizer: DomSanitizer,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.activatedRoute.params.subscribe((params: Params) => {
+    this.routeSub = this.activatedRoute.params.subscribe((params: Params) => {
       if (params['game-search']) {
         this.searchGames('metacrit', params['game-search']);
       } else {
@@ -32,7 +36,7 @@ export class HomeComponent implements OnInit {
   }
 
   searchGames(sort: string, search?: string): void {
-    this.httpService
+    this.gameSub = this.httpService
       .getGameList(sort, search)
       .subscribe((gameList: APIResponse<Game>) => {
         this.games = gameList.results;
@@ -41,7 +45,21 @@ export class HomeComponent implements OnInit {
       });
   }
 
-  getIcon(platform: string): string{
+  getIcon(platform: string): string {
     return this.gamePlatformService.getIcon(platform);
+  }
+
+  openGameDetails(id: string): void {
+    this.router.navigate(['details', id]);
+  }
+
+  ngOnDestroy(): void {
+    if (this.gameSub) {
+      this.gameSub.unsubscribe;
+    }
+
+    if (this.routeSub) {
+      this.routeSub.unsubscribe;
+    }
   }
 }
