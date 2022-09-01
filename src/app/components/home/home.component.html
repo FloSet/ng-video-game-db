@@ -1,21 +1,21 @@
-<div class="filters">
-  <mat-form-field>
-    <mat-label>Sortieren</mat-label>
-    <mat-select panelClass="sort-select" [(ngModel)]="sort" (selectionChange)="searchGames(sort)">
-      <mat-option value="name">Name</mat-option>
-      <mat-option value="-released">Erscheinungsdatum</mat-option>
-      <mat-option value="-added">Hinzugefügt</mat-option>
-      <mat-option value="-created">Erstellt</mat-option>
-      <mat-option value="-updated">Aktuallisiert</mat-option>
-      <mat-option value="-rating">Bewertung</mat-option>
-      <mat-option value="metacritic">Metakritik</mat-option>
-    </mat-select>
-  </mat-form-field>
+<div class="filters" *ngIf="!search">
+    <mat-form-field >
+      <mat-label>Sortieren</mat-label>
+      <mat-select panelClass="sort-select" [(ngModel)]="sort" (selectionChange)="getGames('Sortieren')">
+        <mat-option *ngFor="let data of orderPossibilities; let i = index" value="{{ data[1] }}">{{ data[0] }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  
+  
+    <mat-button-toggle-group name="orderDirection" #toggleGroup="matButtonToggleGroup" [(ngModel)]="selectedOrder" (valueChange)="getGames('Order')">
+      <mat-button-toggle value="default"> {{ defaultOrder }} </mat-button-toggle>
+      <mat-button-toggle value="reverse"> {{ reverseOrder }} </mat-button-toggle>
+    </mat-button-toggle-group>
 </div>
 
 <div class="games">
   <ng-container *ngFor="let game of games">
-    <div class="game">
+    <div class="game" (click)="openGameDetails(game.id)">
       <div class="game-thumb-container">
         <img
         *ngIf="game.background_image"
@@ -38,3 +38,8 @@
     </div>
   </ng-container>
 </div>
+
+<ng-container *ngIf="loading$ | async">
+  <div class="overlay"></div>
+  <mat-spinner></mat-spinner>
+</ng-container>

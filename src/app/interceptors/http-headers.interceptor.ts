@@ -5,11 +5,17 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { environment as env } from 'src/environments/environment';
+import { LoadingService } from '../components/loading.service';
 
 @Injectable()
 export class HttpHeadersInterceptor implements HttpInterceptor {
+  totalRequests: number = 0;
+  completedRequests: number = 0;
+
+  constructor(private loader: LoadingService) {}
+
   intercept(
     req: HttpRequest<any>,
     next: HttpHandler
@@ -18,13 +24,23 @@ export class HttpHeadersInterceptor implements HttpInterceptor {
       setHeaders: {
         'X-RapidAPI-Key': env.RAPID_API_KEY,
         'X-RapidAPI-Host': env.BASE_URL,
-        'User-Agent': 'ng-video-game-db',
       },
       setParams: {
-        key: env.RAWG_API_KEY
-      }
+        key: env.RAWG_API_KEY,
+      },
     });
 
-    return next.handle(req);
+    this.loader.show();
+    this.totalRequests++;
+
+    return next.handle(req).pipe(
+      finalize(() => {
+        this.completedRequests++;
+
+        if (this.completedRequests === this.totalRequests) {
+          this.loader.hide();
+        }
+      })
+    );
   }
 }
