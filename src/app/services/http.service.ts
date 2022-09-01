@@ -10,17 +10,16 @@ import { APIResponse, Game } from '../models';
 export class HttpService {
   constructor(private http: HttpClient) {}
 
-  getGameList(
-    ordering: string,
-    search?: string
-  ): Observable<APIResponse<Game>> {
-    let params = new HttpParams().set('ordering', ordering);
+  getSearchResultGameList(search: string): Observable<APIResponse<Game>> {
+    let params = new HttpParams().set('search', search);
 
-    if (search) {
-      let params = new HttpParams()
-        .set('ordering', ordering)
-        .set('search', search);
-    }
+    return this.http.get<APIResponse<Game>>(`https://${env.BASE_URL}/games`, {
+      params: params,
+    });
+  }
+
+  getGameList(ordering: string): Observable<APIResponse<Game>> {
+    let params = new HttpParams().set('ordering', ordering);
 
     return this.http.get<APIResponse<Game>>(`https://${env.BASE_URL}/games`, {
       params: params,
@@ -36,19 +35,21 @@ export class HttpService {
     );
 
     const gameScreenshotsRequest = this.http.get(
-      `${env.BASE_URL}/games/${id}/screenshots`
+      `https://${env.BASE_URL}/games/${id}/screenshots`
     );
 
     return forkJoin({
       gameInfoRequest,
       gameScreenshotsRequest,
       gameTrailersRequest,
-    }).pipe(map((resp: any) => {
-      return{
-        ...resp['gameInfoRequest'],
-        screenshots: resp['gameScreenshotsRequest']?.results,
-        trailers: resp['gameTrailerRequest']?.results,
-      };
-    }));
+    }).pipe(
+      map((resp: any) => {
+        return {
+          ...resp['gameInfoRequest'],
+          screenshots: resp['gameScreenshotsRequest']?.results,
+          trailers: resp['gameTrailersRequest']?.results,
+        };
+      })
+    );
   }
 }
